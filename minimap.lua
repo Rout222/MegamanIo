@@ -1,4 +1,12 @@
+zzz = 50
+-- WAYPOINTS
+waypoints = {{10,11}}
+lastwp = 1
+
+
 -- BLOCK TYPES
+
+
 WALL = 0x40
 LADDER = 0x80	-- also water and right conveyor belts
 FATAL = 0xC0 -- also ice and left conveyor belts
@@ -36,6 +44,7 @@ MAP_SIZE = 0x4000
 
 --Adicionado por Guilherme
 MAP_ARRAY = {}
+-- require "libs"
 
 
 function getBlockAt(stage, screen, x, y)
@@ -163,18 +172,46 @@ function minimap()
 	local scroll_x = memory.readbyte(SCROLL_X)	
 	for i = 0,NUM_SPRITES-1 do
 		if memory.readbyte(MEGAMAN_ID2+i)>=0x80 then
-			color = string.format("#%x%x%x",memory.readbyte(MEGAMAN_ID + i), memory.readbyte(MEGAMAN_ID2 + i), i*8)
+			color = string.format("#%x%x%x", i*7, i*7, i*7)
 			sx = memory.readbyte(MEGAMAN_X + i)
 			sx = math.ceil(AND(sx+255-scroll_x,255) / TILE_SIZE)
 			sy = math.ceil((memory.readbyte(MEGAMAN_Y + i)) / TILE_SIZE)
-			if sx <= 15 and sx >= 0 then
-				if sy <= 16 and sy >= 0 then	
+			if sx <= 15 and sx > 0 then
+				if sy <= 16 and sy > 0 then	
 					MAP_ARRAY[sy][sx] = i
 				end
 			end
 			gui.drawbox(map_left + sx * MINI_TILE_SIZE, map_top + sy * MINI_TILE_SIZE, map_left + sx * MINI_TILE_SIZE + MINI_TILE_SIZE,  map_top + sy * MINI_TILE_SIZE + MINI_TILE_SIZE, color, "clear")			
 		end
 	end
+	px = memory.readbyte(MEGAMAN_X) + (memory.readbyte(CURRENT_SCREEN) * 255)
+	py = memory.readbyte(MEGAMAN_Y)
+	
+	if(zzz == 0) then
+		-- distMonsters(1,1)
+		zzz = 50
+	end
+	zzz = zzz - 1
 end
 
+function heuristic(x, y)
+	return ((distMegaman(x, y)/distTarget(x, y))-distMonsters(x, y))
+end
+
+function distMegaman(x, y)
+	return math.sqrt(math.pow(px - x,2) + math.pow(py-y,2))
+end
+
+function distTarget(x, y)
+	return math.sqrt(math.pow(waypoints[lastwp][1] - (x + (memory.readbyte(CURRENT_SCREEN) * 255)),2) + math.pow(waypoints[lastwp][2] - y,2))
+end
+
+function distMonsters(x, y)
+	for i = 1,NUM_ROWS do
+			print(MAP_ARRAY[i])
+			if MAP_ARRAY[x][y] == 9 then
+			end
+	end
+		print('\n')
+end
 emu.registerafter(minimap)
